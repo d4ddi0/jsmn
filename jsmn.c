@@ -35,12 +35,10 @@ static void jsmn_fill_token(jsmntok_t *token, jsmntype_t type,
 static int jsmn_parse_primitive(jsmn_parser *parser, const char *js,
 		size_t len, jsmntok_t *tokens, size_t num_tokens) {
 	jsmntok_t *token;
-	int start;
+	int next = parser->pos;
 
-	start = parser->pos;
-
-	for (; parser->pos < len && js[parser->pos] != '\0'; parser->pos++) {
-		switch (js[parser->pos]) {
+	for (; next < len && js[next] != '\0'; next++) {
+		switch (js[next]) {
 #ifndef JSMN_STRICT
 			/* In strict mode primitive must be followed by "," or "}" or "]" */
 			case ':':
@@ -49,28 +47,26 @@ static int jsmn_parse_primitive(jsmn_parser *parser, const char *js,
 			case ','  : case ']'  : case '}' :
 				goto found;
 		}
-		if (js[parser->pos] < 32 || js[parser->pos] >= 127) {
-			parser->pos = start;
+		if (js[next] < 32 || js[next] >= 127) {
 			return JSMN_ERROR_INVAL;
 		}
 	}
 #ifdef JSMN_STRICT
 	/* In strict mode primitive must be followed by a comma/object/array */
-	parser->pos = start;
 	return JSMN_ERROR_PART;
 #endif
 
 found:
 	if (tokens == NULL) {
-		parser->pos--;
+		parser->pos = next - 1;
 		return 0;
 	}
 	token = jsmn_alloc_token(parser, tokens, num_tokens);
 	if (token == NULL) {
-		parser->pos = start;
 		return JSMN_ERROR_NOMEM;
 	}
-	jsmn_fill_token(token, JSMN_PRIMITIVE, start, parser->pos);
+	jsmn_fill_token(token, JSMN_PRIMITIVE, parser->pos, next);
+	parser->pos = next;
 #ifdef JSMN_PARENT_LINKS
 	token->parent = parser->toksuper;
 #endif
@@ -85,25 +81,22 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js,
 		size_t len, jsmntok_t *tokens, size_t num_tokens) {
 	jsmntok_t *token;
 
-	int start = parser->pos;
-
-	parser->pos++;
-
 	/* Skip starting quote */
-	for (; parser->pos < len && js[parser->pos] != '\0'; parser->pos++) {
-		char c = js[parser->pos];
+	for (int next = parser->pos + 1; next < len && js[next] != '\0'; next++) {
+		char c = js[next];
 
 		/* Quote: end of string */
 		if (c == '\"') {
 			if (tokens == NULL) {
+				parser->pos = next;
 				return 0;
 			}
 			token = jsmn_alloc_token(parser, tokens, num_tokens);
 			if (token == NULL) {
-				parser->pos = start;
 				return JSMN_ERROR_NOMEM;
 			}
-			jsmn_fill_token(token, JSMN_STRING, start+1, parser->pos);
+			jsmn_fill_token(token, JSMN_STRING, parser->pos + 1, next);
+			parser->pos = next;
 #ifdef JSMN_PARENT_LINKS
 			token->parent = parser->toksuper;
 #endif
@@ -111,37 +104,30 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js,
 		}
 
 		/* Backslash: Quoted symbol expected */
-		if (c == '\\' && parser->pos + 1 < len) {
+		if (c == '\\' && ++next < len) {
 			int i;
-			parser->pos++;
-			switch (js[parser->pos]) {
+			switch (js[next]) {
 				/* Allowed escaped symbols */
 				case '\"': case '/' : case '\\' : case 'b' :
 				case 'f' : case 'r' : case 'n'  : case 't' :
 					break;
 				/* Allows escaped symbol \uXXXX */
 				case 'u':
-					parser->pos++;
-					for(i = 0; i < 4 && parser->pos < len && js[parser->pos] != '\0'; i++) {
+					for(i = 0; i < 4 && ++next < len && js[next] != '\0'; i++) {
 						/* If it isn't a hex character we have an error */
-						if(!((js[parser->pos] >= 48 && js[parser->pos] <= 57) || /* 0-9 */
-									(js[parser->pos] >= 65 && js[parser->pos] <= 70) || /* A-F */
-									(js[parser->pos] >= 97 && js[parser->pos] <= 102))) { /* a-f */
-							parser->pos = start;
+						if(!((js[next] >= 48 && js[next] <= 57) || /* 0-9 */
+									(js[next] >= 65 && js[next] <= 70) || /* A-F */
+									(js[next] >= 97 && js[next] <= 102))) { /* a-f */
 							return JSMN_ERROR_INVAL;
 						}
-						parser->pos++;
 					}
-					parser->pos--;
 					break;
 				/* Unexpected symbol */
 				default:
-					parser->pos = start;
 					return JSMN_ERROR_INVAL;
 			}
 		}
 	}
-	parser->pos = start;
 	return JSMN_ERROR_PART;
 }
 
