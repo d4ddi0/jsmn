@@ -33,8 +33,7 @@ static void jsmn_fill_token(jsmntok_t *token, jsmntype_t type,
  * Fills next available token with JSON primitive.
  */
 static int jsmn_parse_primitive(jsmn_parser *parser, const char *js,
-		size_t len, jsmntok_t *tokens, size_t num_tokens) {
-	jsmntok_t *token;
+		size_t len, jsmntok_t *token) {
 	int next = parser->pos;
 
 	for (; next < len && js[next] != '\0'; next++) {
@@ -57,13 +56,9 @@ static int jsmn_parse_primitive(jsmn_parser *parser, const char *js,
 #endif
 
 found:
-	if (tokens == NULL) {
+	if (token == NULL) {
 		parser->pos = next - 1;
 		return 0;
-	}
-	token = jsmn_alloc_token(parser, tokens, num_tokens);
-	if (token == NULL) {
-		return JSMN_ERROR_NOMEM;
 	}
 	jsmn_fill_token(token, JSMN_PRIMITIVE, parser->pos, next);
 	parser->pos = next;
@@ -78,22 +73,16 @@ found:
  * Fills next token with JSON string.
  */
 static int jsmn_parse_string(jsmn_parser *parser, const char *js,
-		size_t len, jsmntok_t *tokens, size_t num_tokens) {
-	jsmntok_t *token;
-
+		size_t len, jsmntok_t *token) {
 	/* Skip starting quote */
 	for (int next = parser->pos + 1; next < len && js[next] != '\0'; next++) {
 		char c = js[next];
 
 		/* Quote: end of string */
 		if (c == '\"') {
-			if (tokens == NULL) {
+			if (token == NULL) {
 				parser->pos = next;
 				return 0;
-			}
-			token = jsmn_alloc_token(parser, tokens, num_tokens);
-			if (token == NULL) {
-				return JSMN_ERROR_NOMEM;
 			}
 			jsmn_fill_token(token, JSMN_STRING, parser->pos + 1, next);
 			parser->pos = next;
@@ -138,7 +127,7 @@ int jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
 		jsmntok_t *tokens, unsigned int num_tokens) {
 	int r;
 	int i;
-	jsmntok_t *token;
+	jsmntok_t *token = NULL;
 	int count = parser->toknext;
 
 	for (; parser->pos < len && js[parser->pos] != '\0'; parser->pos++) {
@@ -215,7 +204,12 @@ int jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
 #endif
 				break;
 			case '\"':
-				r = jsmn_parse_string(parser, js, len, tokens, num_tokens);
+				if (tokens) {
+					token = jsmn_alloc_token(parser, tokens, num_tokens);
+					if (token == NULL)
+						return JSMN_ERROR_NOMEM;
+				}
+				r = jsmn_parse_string(parser, js, len, token);
 				if (r < 0) return r;
 				count++;
 				if (parser->toksuper != -1 && tokens != NULL)
@@ -261,7 +255,12 @@ int jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
 			/* In non-strict mode every unquoted value is a primitive */
 			default:
 #endif
-				r = jsmn_parse_primitive(parser, js, len, tokens, num_tokens);
+			        if (tokens) {
+					token = jsmn_alloc_token(parser, tokens, num_tokens);
+					if (token == NULL)
+						return JSMN_ERROR_NOMEM;
+				}
+				r = jsmn_parse_primitive(parser, js, len, token);
 				if (r < 0) return r;
 				count++;
 				if (parser->toksuper != -1 && tokens != NULL)

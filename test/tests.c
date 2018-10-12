@@ -135,7 +135,7 @@ int test_string(void) {
 
 	check(parse("{\"a\":\"str\\uFFGFstr\"}", JSMN_ERROR_INVAL, 3));
 	check(parse("{\"a\":\"str\\u@FfF\"}", JSMN_ERROR_INVAL, 3));
-	check(parse("{{\"a\":[\"\\u028\"]}", JSMN_ERROR_INVAL, 4));
+	check(parse("{{\"a\":[\"\\u028\"]}", JSMN_ERROR_INVAL, 5));
 	return 0;
 }
 
@@ -146,8 +146,8 @@ int test_partial_string(void) {
 	jsmntok_t tok[5];
 	const char *js = "{\"x\": \"va\\\\ue\", \"y\": \"value y\"}";
 
-	jsmn_init(&p);
 	for (i = 1; i <= strlen(js); i++) {
+		jsmn_init(&p);
 		r = jsmn_parse(&p, js, i, tok, sizeof(tok)/sizeof(tok[0]));
 		if (i == strlen(js)) {
 			check(r == 5);
@@ -169,11 +169,11 @@ int test_partial_array(void) {
 	int r;
 	int i;
 	jsmn_parser p;
-	jsmntok_t tok[10];
+	jsmntok_t tok[6];
 	const char *js = "[ 1, true, [123, \"hello\"]]";
 
-	jsmn_init(&p);
 	for (i = 1; i <= strlen(js); i++) {
+		jsmn_init(&p);
 		r = jsmn_parse(&p, js, i, tok, sizeof(tok)/sizeof(tok[0]));
 		if (i == strlen(js)) {
 			check(r == 6);
