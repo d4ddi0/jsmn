@@ -31,21 +31,24 @@ enum jsmnerr {
 	JSMN_ERROR_PART = -3
 };
 
+struct jsmntok;
+typedef struct jsmntok jsmntok_t;
+
 /**
  * JSON token description.
  * type		type (object, array, string etc.)
  * start	start position in JSON data string
  * end		end position in JSON data string
  */
-typedef struct {
+struct jsmntok {
 	jsmntype_t type;
 	int start;
 	int end;
 	int size;
 #ifdef JSMN_PARENT_LINKS
-	int parent;
+	jsmntok_t *parent;
 #endif
-} jsmntok_t;
+};
 
 /**
  * JSON parser. Contains an array of token blocks available. Also stores
@@ -53,10 +56,10 @@ typedef struct {
  */
 typedef struct {
 	jsmntok_t *tokens;
-	size_t num_tokens;
+	jsmntok_t *tokend;
 	unsigned int pos; /* offset in the JSON string */
-	unsigned int toknext; /* next token to allocate */
-	int toksuper; /* superior token node, e.g parent object or array */
+	jsmntok_t *toknext; /* next token to allocate */
+	jsmntok_t *toksuper; /* superior token node, e.g parent object or array */
 } jsmn_parser;
 
 /**
