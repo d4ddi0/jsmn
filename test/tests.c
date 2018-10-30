@@ -47,6 +47,14 @@ int test_object(void) {
 				JSMN_PRIMITIVE, "0",
 				JSMN_STRING, "b", 1,
 				JSMN_STRING, "c", 0));
+	check(parse("{\"a\":{\"b\":{\"c\":{}}}}", 7, 7,
+				JSMN_OBJECT, 0, 20, 1,
+				JSMN_STRING, "a", 1,
+				JSMN_OBJECT, 5, 19, 1,
+				JSMN_STRING, "b", 1,
+				JSMN_OBJECT, 10, 18, 1,
+				JSMN_STRING, "c", 1,
+				JSMN_OBJECT, 15, 17, 0));
 
 #ifdef JSMN_STRICT
 	check(parse("{\"a\"\n0}", JSMN_ERROR_INVAL, 3));
