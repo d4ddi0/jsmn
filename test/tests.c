@@ -143,7 +143,7 @@ int test_string(void) {
 
 	check(parse("{\"a\":\"str\\uFFGFstr\"}", JSMN_ERROR_INVAL, 3));
 	check(parse("{\"a\":\"str\\u@FfF\"}", JSMN_ERROR_INVAL, 3));
-	check(parse("{{\"a\":[\"\\u028\"]}", JSMN_ERROR_INVAL, 4));
+	check(parse("{{\"a\":[\"\\u028\"]}", JSMN_ERROR_INVAL, 5));
 	return 0;
 }
 
@@ -154,8 +154,8 @@ int test_partial_string(void) {
 	jsmntok_t tok[5];
 	const char *js = "{\"x\": \"va\\\\ue\", \"y\": \"value y\"}";
 
-	jsmn_init(&p);
 	for (i = 1; i <= strlen(js); i++) {
+		jsmn_init(&p);
 		r = jsmn_parse(&p, js, i, tok, sizeof(tok)/sizeof(tok[0]));
 		if (i == strlen(js)) {
 			check(r == 5);
@@ -177,11 +177,11 @@ int test_partial_array(void) {
 	int r;
 	int i;
 	jsmn_parser p;
-	jsmntok_t tok[10];
+	jsmntok_t tok[6];
 	const char *js = "[ 1, true, [123, \"hello\"]]";
 
-	jsmn_init(&p);
 	for (i = 1; i <= strlen(js); i++) {
+		jsmn_init(&p);
 		r = jsmn_parse(&p, js, i, tok, sizeof(tok)/sizeof(tok[0]));
 		if (i == strlen(js)) {
 			check(r == 6);
@@ -204,7 +204,7 @@ int test_array_nomem(void) {
 	int i;
 	int r;
 	jsmn_parser p;
-	jsmntok_t toksmall[10], toklarge[10];
+	jsmntok_t toksmall[10];
 	const char *js;
 
 	js = "  [ 1, true, [123, \"hello\"]]";
@@ -212,15 +212,13 @@ int test_array_nomem(void) {
 	for (i = 0; i < 6; i++) {
 		jsmn_init(&p);
 		memset(toksmall, 0, sizeof(toksmall));
-		memset(toklarge, 0, sizeof(toklarge));
 		r = jsmn_parse(&p, js, strlen(js), toksmall, i);
 		check(r == JSMN_ERROR_NOMEM);
 
-		memcpy(toklarge, toksmall, sizeof(toksmall));
-
-		r = jsmn_parse(&p, js, strlen(js), toklarge, 10);
+		jsmn_init(&p);
+		r = jsmn_parse(&p, js, strlen(js), toksmall, 10);
 		check(r >= 0);
-		check(tokeq(js, toklarge, 4,
+		check(tokeq(js, toksmall, 6,
 					JSMN_ARRAY, -1, -1, 3,
 					JSMN_PRIMITIVE, "1",
 					JSMN_PRIMITIVE, "true",
