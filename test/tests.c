@@ -299,47 +299,48 @@ int test_input_length(void) {
 
 int test_count(void) {
 	jsmn_parser p;
+	jsmntok_t tokens[7];
 	const char *js;
 
 	js = "{}";
 	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), NULL, 0) == 1);
+	check(jsmn_parse(&p, js, strlen(js), tokens, 1) == 1);
 
 	js = "[]";
 	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), NULL, 0) == 1);
+	check(jsmn_parse(&p, js, strlen(js), tokens, 1) == 1);
 
 	js = "[[]]";
 	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), NULL, 0) == 2);
+	check(jsmn_parse(&p, js, strlen(js), tokens, 2) == 2);
 
 	js = "[[], []]";
 	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), NULL, 0) == 3);
+	check(jsmn_parse(&p, js, strlen(js), tokens, 3) == 3);
 
 	js = "[[], []]";
 	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), NULL, 0) == 3);
+	check(jsmn_parse(&p, js, strlen(js), tokens, 3) == 3);
 
 	js = "[[], [[]], [[], []]]";
 	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), NULL, 0) == 7);
+	check(jsmn_parse(&p, js, strlen(js), tokens, 7) == 7);
 
 	js = "[\"a\", [[], []]]";
 	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), NULL, 0) == 5);
+	check(jsmn_parse(&p, js, strlen(js), tokens, 5) == 5);
 
 	js = "[[], \"[], [[]]\", [[]]]";
 	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), NULL, 0) == 5);
+	check(jsmn_parse(&p, js, strlen(js), tokens, 5) == 5);
 
 	js = "[1, 2, 3]";
 	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), NULL, 0) == 4);
+	check(jsmn_parse(&p, js, strlen(js), tokens, 4) == 4);
 
 	js = "[1, 2, [3, \"a\"], null]";
 	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), NULL, 0) == 7);
+	check(jsmn_parse(&p, js, strlen(js), tokens, 7) == 7);
 
 	return 0;
 }
