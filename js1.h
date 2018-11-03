@@ -1,5 +1,5 @@
-#ifndef __JSMN_H_
-#define __JSMN_H_
+#ifndef __JS1_H_
+#define __JS1_H_
 
 #include <stddef.h>
 
@@ -14,25 +14,22 @@ extern "C" {
  * 	o String
  * 	o Other primitive: number, boolean (true/false) or null
  */
-typedef enum {
-	JSMN_UNDEFINED = 0,
-	JSMN_OBJECT = 1,
-	JSMN_ARRAY = 2,
-	JSMN_STRING = 3,
-	JSMN_PRIMITIVE = 4
-} jsmntype_t;
-
-enum jsmnerr {
-	/* Not enough tokens were provided */
-	JSMN_ERROR_NOMEM = -1,
-	/* Invalid character inside JSON string */
-	JSMN_ERROR_INVAL = -2,
-	/* The string is not a full JSON packet, more bytes expected */
-	JSMN_ERROR_PART = -3
+enum js1type {
+	JS1_UNDEFINED = 0,
+	JS1_OBJECT = 1,
+	JS1_ARRAY = 2,
+	JS1_STRING = 3,
+	JS1_PRIMITIVE = 4
 };
 
-struct jsmntok;
-typedef struct jsmntok jsmntok_t;
+enum js1err {
+	/* Not enough tokens were provided */
+	JS1_ERROR_NOMEM = -1,
+	/* Invalid character inside JSON string */
+	JS1_ERROR_INVAL = -2,
+	/* The string is not a full JSON packet, more bytes expected */
+	JS1_ERROR_PART = -3
+};
 
 /**
  * JSON token description.
@@ -40,13 +37,13 @@ typedef struct jsmntok jsmntok_t;
  * start	start position in JSON data string
  * end		end position in JSON data string
  */
-struct jsmntok {
-	jsmntype_t type;
+struct js1token {
+	enum js1type type;
 	int start;
 	int end;
 	int size;
-#ifdef JSMN_PARENT_LINKS
-	jsmntok_t *parent;
+#ifdef JS1_PARENT_LINKS
+	struct js1token *parent;
 #endif
 };
 
@@ -54,28 +51,27 @@ struct jsmntok {
  * JSON parser. Contains an array of token blocks available. Also stores
  * the string being parsed now and current position in that string
  */
-typedef struct {
-	jsmntok_t *tokens;
-	jsmntok_t *tokend;
+struct js1_parser {
 	unsigned int pos; /* offset in the JSON string */
-	jsmntok_t *toknext; /* next token to allocate */
-	jsmntok_t *toksuper; /* superior token node, e.g parent object or array */
-} jsmn_parser;
+	struct js1token *tokens;
+	struct js1token *tokend;
+	struct js1token *toknext; /* next token to allocate */
+	struct js1token *toksuper; /* superior token node, e.g parent object or array */
+};
 
 /**
  * Create JSON parser over an array of tokens
  */
-void jsmn_init(jsmn_parser *parser);
+void js1_init(struct js1_parser *parser, struct js1token *tokens, size_t num_tokens);
 
 /**
  * Run JSON parser. It parses a JSON data string into and array of tokens, each describing
  * a single JSON object.
  */
-int jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
-		jsmntok_t *tokens, unsigned int num_tokens);
+int js1_parse(struct js1_parser *parser, const char *js, size_t len);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __JSMN_H_ */
+#endif /* __JS1_H_ */

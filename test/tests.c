@@ -8,192 +8,192 @@
 
 int test_empty(void) {
 	check(parse("{}", 1, 1,
-				JSMN_OBJECT, 0, 2, 0));
+				JS1_OBJECT, 0, 2, 0));
 	check(parse("[]", 1, 1,
-				JSMN_ARRAY, 0, 2, 0));
+				JS1_ARRAY, 0, 2, 0));
 	check(parse("[{},{}]", 3, 3,
-				JSMN_ARRAY, 0, 7, 2,
-				JSMN_OBJECT, 1, 3, 0,
-				JSMN_OBJECT, 4, 6, 0));
+				JS1_ARRAY, 0, 7, 2,
+				JS1_OBJECT, 1, 3, 0,
+				JS1_OBJECT, 4, 6, 0));
 	return 0;
 }
 
 int test_object(void) {
 	check(parse("{\"a\":0}", 3, 3,
-				JSMN_OBJECT, 0, 7, 1,
-				JSMN_STRING, "a", 1,
-				JSMN_PRIMITIVE, "0"));
+				JS1_OBJECT, 0, 7, 1,
+				JS1_STRING, "a", 1,
+				JS1_PRIMITIVE, "0"));
 	check(parse("{\"a\":[]}", 3, 3,
-				JSMN_OBJECT, 0, 8, 1,
-				JSMN_STRING, "a", 1,
-				JSMN_ARRAY, 5, 7, 0));
+				JS1_OBJECT, 0, 8, 1,
+				JS1_STRING, "a", 1,
+				JS1_ARRAY, 5, 7, 0));
 	check(parse("{\"a\":{},\"b\":{}}", 5, 5,
-				JSMN_OBJECT, -1, -1, 2,
-				JSMN_STRING, "a", 1,
-				JSMN_OBJECT, -1, -1, 0,
-				JSMN_STRING, "b", 1,
-				JSMN_OBJECT, -1, -1, 0));
+				JS1_OBJECT, -1, -1, 2,
+				JS1_STRING, "a", 1,
+				JS1_OBJECT, -1, -1, 0,
+				JS1_STRING, "b", 1,
+				JS1_OBJECT, -1, -1, 0));
 	check(parse("{\n \"Day\": 26,\n \"Month\": 9,\n \"Year\": 12\n }", 7, 7,
-				JSMN_OBJECT, -1, -1, 3,
-				JSMN_STRING, "Day", 1,
-				JSMN_PRIMITIVE, "26",
-				JSMN_STRING, "Month", 1,
-				JSMN_PRIMITIVE, "9",
-				JSMN_STRING, "Year", 1,
-				JSMN_PRIMITIVE, "12"));
+				JS1_OBJECT, -1, -1, 3,
+				JS1_STRING, "Day", 1,
+				JS1_PRIMITIVE, "26",
+				JS1_STRING, "Month", 1,
+				JS1_PRIMITIVE, "9",
+				JS1_STRING, "Year", 1,
+				JS1_PRIMITIVE, "12"));
 	check(parse("{\"a\": 0, \"b\": \"c\"}", 5, 5,
-				JSMN_OBJECT, -1, -1, 2,
-				JSMN_STRING, "a", 1,
-				JSMN_PRIMITIVE, "0",
-				JSMN_STRING, "b", 1,
-				JSMN_STRING, "c", 0));
+				JS1_OBJECT, -1, -1, 2,
+				JS1_STRING, "a", 1,
+				JS1_PRIMITIVE, "0",
+				JS1_STRING, "b", 1,
+				JS1_STRING, "c", 0));
 	check(parse("{\"a\":{\"b\":{\"c\":{}}}}", 7, 7,
-				JSMN_OBJECT, 0, 20, 1,
-				JSMN_STRING, "a", 1,
-				JSMN_OBJECT, 5, 19, 1,
-				JSMN_STRING, "b", 1,
-				JSMN_OBJECT, 10, 18, 1,
-				JSMN_STRING, "c", 1,
-				JSMN_OBJECT, 15, 17, 0));
+				JS1_OBJECT, 0, 20, 1,
+				JS1_STRING, "a", 1,
+				JS1_OBJECT, 5, 19, 1,
+				JS1_STRING, "b", 1,
+				JS1_OBJECT, 10, 18, 1,
+				JS1_STRING, "c", 1,
+				JS1_OBJECT, 15, 17, 0));
 
-#ifdef JSMN_STRICT
-	check(parse("{\"a\"\n0}", JSMN_ERROR_INVAL, 3));
-	check(parse("{\"a\", 0}", JSMN_ERROR_INVAL, 3));
-	check(parse("{\"a\": {2}}", JSMN_ERROR_INVAL, 3));
-	check(parse("{\"a\": {2: 3}}", JSMN_ERROR_INVAL, 3));
-	check(parse("{\"a\": {\"a\": 2 3}}", JSMN_ERROR_INVAL, 5));
+#ifdef JS1_STRICT
+	check(parse("{\"a\"\n0}", JS1_ERROR_INVAL, 3));
+	check(parse("{\"a\", 0}", JS1_ERROR_INVAL, 3));
+	check(parse("{\"a\": {2}}", JS1_ERROR_INVAL, 3));
+	check(parse("{\"a\": {2: 3}}", JS1_ERROR_INVAL, 3));
+	check(parse("{\"a\": {\"a\": 2 3}}", JS1_ERROR_INVAL, 5));
 	/* FIXME */
-	/*check(parse("{\"a\"}", JSMN_ERROR_INVAL, 2));*/
-	/*check(parse("{\"a\": 1, \"b\"}", JSMN_ERROR_INVAL, 4));*/
-	/*check(parse("{\"a\",\"b\":1}", JSMN_ERROR_INVAL, 4));*/
-	/*check(parse("{\"a\":1,}", JSMN_ERROR_INVAL, 4));*/
-	/*check(parse("{\"a\":\"b\":\"c\"}", JSMN_ERROR_INVAL, 4));*/
-	/*check(parse("{,}", JSMN_ERROR_INVAL, 4));*/
+	/*check(parse("{\"a\"}", JS1_ERROR_INVAL, 2));*/
+	/*check(parse("{\"a\": 1, \"b\"}", JS1_ERROR_INVAL, 4));*/
+	/*check(parse("{\"a\",\"b\":1}", JS1_ERROR_INVAL, 4));*/
+	/*check(parse("{\"a\":1,}", JS1_ERROR_INVAL, 4));*/
+	/*check(parse("{\"a\":\"b\":\"c\"}", JS1_ERROR_INVAL, 4));*/
+	/*check(parse("{,}", JS1_ERROR_INVAL, 4));*/
 #endif
 	return 0;
 }
 
 int test_array(void) {
 	/* FIXME */
-	/*check(parse("[10}", JSMN_ERROR_INVAL, 3));*/
-	/*check(parse("[1,,3]", JSMN_ERROR_INVAL, 3)*/
+	/*check(parse("[10}", JS1_ERROR_INVAL, 3));*/
+	/*check(parse("[1,,3]", JS1_ERROR_INVAL, 3)*/
 	check(parse("[10]", 2, 2,
-				JSMN_ARRAY, -1, -1, 1,
-				JSMN_PRIMITIVE, "10"));
-	check(parse("{\"a\": 1]", JSMN_ERROR_INVAL, 3));
+				JS1_ARRAY, -1, -1, 1,
+				JS1_PRIMITIVE, "10"));
+	check(parse("{\"a\": 1]", JS1_ERROR_INVAL, 3));
 	/* FIXME */
-	/*check(parse("[\"a\": 1]", JSMN_ERROR_INVAL, 3));*/
+	/*check(parse("[\"a\": 1]", JS1_ERROR_INVAL, 3));*/
 	return 0;
 }
 
 int test_primitive(void) {
 	check(parse("{\"boolVar\" : true }", 3, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "boolVar", 1,
-				JSMN_PRIMITIVE, "true"));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "boolVar", 1,
+				JS1_PRIMITIVE, "true"));
 	check(parse("{\"boolVar\" : false }", 3, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "boolVar", 1,
-				JSMN_PRIMITIVE, "false"));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "boolVar", 1,
+				JS1_PRIMITIVE, "false"));
 	check(parse("{\"nullVar\" : null }", 3, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "nullVar", 1,
-				JSMN_PRIMITIVE, "null"));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "nullVar", 1,
+				JS1_PRIMITIVE, "null"));
 	check(parse("{\"intVar\" : 12}", 3, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "intVar", 1,
-				JSMN_PRIMITIVE, "12"));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "intVar", 1,
+				JS1_PRIMITIVE, "12"));
 	check(parse("{\"floatVar\" : 12.345}", 3, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "floatVar", 1,
-				JSMN_PRIMITIVE, "12.345"));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "floatVar", 1,
+				JS1_PRIMITIVE, "12.345"));
 	return 0;
 }
 
 int test_string(void) {
 	check(parse("{\"strVar\" : \"hello world\"}", 3, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "strVar", 1,
-				JSMN_STRING, "hello world", 0));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "strVar", 1,
+				JS1_STRING, "hello world", 0));
 	check(parse("{\"strVar\" : \"escapes: \\/\\r\\n\\t\\b\\f\\\"\\\\\"}", 3, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "strVar", 1,
-				JSMN_STRING, "escapes: \\/\\r\\n\\t\\b\\f\\\"\\\\", 0));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "strVar", 1,
+				JS1_STRING, "escapes: \\/\\r\\n\\t\\b\\f\\\"\\\\", 0));
 	check(parse("{\"strVar\": \"\"}", 3, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "strVar", 1,
-				JSMN_STRING, "", 0));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "strVar", 1,
+				JS1_STRING, "", 0));
 	check(parse("{\"a\":\"\\uAbcD\"}", 3, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "a", 1,
-				JSMN_STRING, "\\uAbcD", 0));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "a", 1,
+				JS1_STRING, "\\uAbcD", 0));
 	check(parse("{\"a\":\"str\\u0000\"}", 3, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "a", 1,
-				JSMN_STRING, "str\\u0000", 0));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "a", 1,
+				JS1_STRING, "str\\u0000", 0));
 	check(parse("{\"a\":\"\\uFFFFstr\"}", 3, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "a", 1,
-				JSMN_STRING, "\\uFFFFstr", 0));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "a", 1,
+				JS1_STRING, "\\uFFFFstr", 0));
 	check(parse("{\"a\":[\"\\u0280\"]}", 4, 4,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "a", 1,
-				JSMN_ARRAY, -1, -1, 1,
-				JSMN_STRING, "\\u0280", 0));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "a", 1,
+				JS1_ARRAY, -1, -1, 1,
+				JS1_STRING, "\\u0280", 0));
 
-	check(parse("{\"a\":\"str\\uFFGFstr\"}", JSMN_ERROR_INVAL, 3));
-	check(parse("{\"a\":\"str\\u@FfF\"}", JSMN_ERROR_INVAL, 3));
-	check(parse("{{\"a\":[\"\\u028\"]}", JSMN_ERROR_INVAL, 5));
+	check(parse("{\"a\":\"str\\uFFGFstr\"}", JS1_ERROR_INVAL, 3));
+	check(parse("{\"a\":\"str\\u@FfF\"}", JS1_ERROR_INVAL, 3));
+	check(parse("{{\"a\":[\"\\u028\"]}", JS1_ERROR_INVAL, 5));
 	return 0;
 }
 
 int test_partial_string(void) {
 	int i;
 	int r;
-	jsmn_parser p;
-	jsmntok_t tok[5];
+	struct js1_parser p;
+	struct js1token tok[5];
 	const char *js = "{\"x\": \"va\\\\ue\", \"y\": \"value y\"}";
 
 	for (i = 1; i <= strlen(js); i++) {
-		jsmn_init(&p);
-		r = jsmn_parse(&p, js, i, tok, sizeof(tok)/sizeof(tok[0]));
+		js1_init(&p, tok, sizeof(tok)/sizeof(tok[0]));
+		r = js1_parse(&p, js, i);
 		if (i == strlen(js)) {
 			check(r == 5);
 			check(tokeq(js, tok, 5,
-					JSMN_OBJECT, -1, -1, 2,
-					JSMN_STRING, "x", 1,
-					JSMN_STRING, "va\\\\ue", 0,
-					JSMN_STRING, "y", 1,
-					JSMN_STRING, "value y", 0));
+					JS1_OBJECT, -1, -1, 2,
+					JS1_STRING, "x", 1,
+					JS1_STRING, "va\\\\ue", 0,
+					JS1_STRING, "y", 1,
+					JS1_STRING, "value y", 0));
 		} else {
-			check(r == JSMN_ERROR_PART);
+			check(r == JS1_ERROR_PART);
 		}
 	}
 	return 0;
 }
 
 int test_partial_array(void) {
-#ifdef JSMN_STRICT
+#ifdef JS1_STRICT
 	int r;
 	int i;
-	jsmn_parser p;
-	jsmntok_t tok[6];
+	struct js1_parser p;
+	struct js1token tok[6];
 	const char *js = "[ 1, true, [123, \"hello\"]]";
 
 	for (i = 1; i <= strlen(js); i++) {
-		jsmn_init(&p);
-		r = jsmn_parse(&p, js, i, tok, sizeof(tok)/sizeof(tok[0]));
+		js1_init(&p, tok, sizeof(tok)/sizeof(tok[0]));
+		r = js1_parse(&p, js, i);
 		if (i == strlen(js)) {
 			check(r == 6);
 			check(tokeq(js, tok, 6,
-					JSMN_ARRAY, -1, -1, 3,
-					JSMN_PRIMITIVE, "1",
-					JSMN_PRIMITIVE, "true",
-					JSMN_ARRAY, -1, -1, 2,
-					JSMN_PRIMITIVE, "123",
-					JSMN_STRING, "hello", 0));
+					JS1_ARRAY, -1, -1, 3,
+					JS1_PRIMITIVE, "1",
+					JS1_PRIMITIVE, "true",
+					JS1_ARRAY, -1, -1, 2,
+					JS1_PRIMITIVE, "123",
+					JS1_STRING, "hello", 0));
 		} else {
-			check(r == JSMN_ERROR_PART);
+			check(r == JS1_ERROR_PART);
 		}
 	}
 #endif
@@ -203,57 +203,57 @@ int test_partial_array(void) {
 int test_array_nomem(void) {
 	int i;
 	int r;
-	jsmn_parser p;
-	jsmntok_t toksmall[10];
+	struct js1_parser p;
+	struct js1token toksmall[10];
 	const char *js;
 
 	js = "  [ 1, true, [123, \"hello\"]]";
 
 	for (i = 0; i < 6; i++) {
-		jsmn_init(&p);
+		js1_init(&p, toksmall, i);
 		memset(toksmall, 0, sizeof(toksmall));
-		r = jsmn_parse(&p, js, strlen(js), toksmall, i);
-		check(r == JSMN_ERROR_NOMEM);
+		r = js1_parse(&p, js, strlen(js));
+		check(r == JS1_ERROR_NOMEM);
 
-		jsmn_init(&p);
-		r = jsmn_parse(&p, js, strlen(js), toksmall, 10);
+		js1_init(&p, toksmall, 10);
+		r = js1_parse(&p, js, strlen(js));
 		check(r >= 0);
 		check(tokeq(js, toksmall, 6,
-					JSMN_ARRAY, -1, -1, 3,
-					JSMN_PRIMITIVE, "1",
-					JSMN_PRIMITIVE, "true",
-					JSMN_ARRAY, -1, -1, 2,
-					JSMN_PRIMITIVE, "123",
-					JSMN_STRING, "hello", 0));
+					JS1_ARRAY, -1, -1, 3,
+					JS1_PRIMITIVE, "1",
+					JS1_PRIMITIVE, "true",
+					JS1_ARRAY, -1, -1, 2,
+					JS1_PRIMITIVE, "123",
+					JS1_STRING, "hello", 0));
 	}
 	return 0;
 }
 
 int test_unquoted_keys(void) {
-#ifndef JSMN_STRICT
+#ifndef JS1_STRICT
 	int r;
-	jsmn_parser p;
-	jsmntok_t tok[10];
+	struct js1_parser p;
+	struct js1token tok[10];
 	const char *js;
 
-	jsmn_init(&p);
+	js1_init(&p, tok, 10);
 	js = "key1: \"value\"\nkey2 : 123";
 
-	r = jsmn_parse(&p, js, strlen(js), tok, 10);
+	r = js1_parse(&p, js, strlen(js));
 	check(r >= 0);
 	check(tokeq(js, tok, 4,
-				JSMN_PRIMITIVE, "key1",
-				JSMN_STRING, "value", 0,
-				JSMN_PRIMITIVE, "key2",
-				JSMN_PRIMITIVE, "123"));
+				JS1_PRIMITIVE, "key1",
+				JS1_STRING, "value", 0,
+				JS1_PRIMITIVE, "key2",
+				JS1_PRIMITIVE, "123"));
 #endif
 	return 0;
 }
 
 int test_issue_22(void) {
 	int r;
-	jsmn_parser p;
-	jsmntok_t tokens[128];
+	struct js1_parser p;
+	struct js1token tokens[128];
 	const char *js;
 
 	js = "{ \"height\":10, \"layers\":[ { \"data\":[6,6], \"height\":10, "
@@ -264,8 +264,8 @@ int test_issue_22(void) {
 		"\"imageheight\":64, \"imagewidth\":160, \"margin\":0, \"name\":\"Tiles\", "
 		"\"properties\":{}, \"spacing\":0, \"tileheight\":32, \"tilewidth\":32 }], "
 		"\"tilewidth\":32, \"version\":1, \"width\":10 }";
-	jsmn_init(&p);
-	r = jsmn_parse(&p, js, strlen(js), tokens, 128);
+	js1_init(&p, tokens, 128);
+	r = js1_parse(&p, js, strlen(js));
 	check(r >= 0);
 	return 0;
 }
@@ -273,99 +273,99 @@ int test_issue_22(void) {
 int test_issue_27(void) {
 	const char *js =
 		"{ \"name\" : \"Jack\", \"age\" : 27 } { \"name\" : \"Anna\", ";
-	check(parse(js, JSMN_ERROR_PART, 8));
+	check(parse(js, JS1_ERROR_PART, 8));
 	return 0;
 }
 
 int test_input_length(void) {
 	const char *js;
 	int r;
-	jsmn_parser p;
-	jsmntok_t tokens[10];
+	struct js1_parser p;
+	struct js1token tokens[10];
 
 	js = "{\"a\": 0}garbage";
 
-	jsmn_init(&p);
-	r = jsmn_parse(&p, js, 8, tokens, 10);
+	js1_init(&p, tokens, 10);
+	r = js1_parse(&p, js, 8);
 	check(r == 3);
 	check(tokeq(js, tokens, 3,
-				JSMN_OBJECT, -1, -1, 1,
-				JSMN_STRING, "a", 1,
-				JSMN_PRIMITIVE, "0"));
+				JS1_OBJECT, -1, -1, 1,
+				JS1_STRING, "a", 1,
+				JS1_PRIMITIVE, "0"));
 	return 0;
 }
 
 int test_count(void) {
-	jsmn_parser p;
-	jsmntok_t tokens[7];
+	struct js1_parser p;
+	struct js1token tokens[7];
 	const char *js;
 
 	js = "{}";
-	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), tokens, 1) == 1);
+	js1_init(&p, tokens, 1);
+	check(js1_parse(&p, js, strlen(js)) == 1);
 
 	js = "[]";
-	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), tokens, 1) == 1);
+	js1_init(&p, tokens, 1);
+	check(js1_parse(&p, js, strlen(js)) == 1);
 
 	js = "[[]]";
-	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), tokens, 2) == 2);
+	js1_init(&p, tokens, 2);
+	check(js1_parse(&p, js, strlen(js)) == 2);
 
 	js = "[[], []]";
-	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), tokens, 3) == 3);
+	js1_init(&p, tokens, 3);
+	check(js1_parse(&p, js, strlen(js)) == 3);
 
 	js = "[[], []]";
-	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), tokens, 3) == 3);
+	js1_init(&p, tokens, 3);
+	check(js1_parse(&p, js, strlen(js)) == 3);
 
 	js = "[[], [[]], [[], []]]";
-	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), tokens, 7) == 7);
+	js1_init(&p, tokens, 7);
+	check(js1_parse(&p, js, strlen(js)) == 7);
 
 	js = "[\"a\", [[], []]]";
-	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), tokens, 5) == 5);
+	js1_init(&p, tokens, 5);
+	check(js1_parse(&p, js, strlen(js)) == 5);
 
 	js = "[[], \"[], [[]]\", [[]]]";
-	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), tokens, 5) == 5);
+	js1_init(&p, tokens, 5);
+	check(js1_parse(&p, js, strlen(js)) == 5);
 
 	js = "[1, 2, 3]";
-	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), tokens, 4) == 4);
+	js1_init(&p, tokens, 4);
+	check(js1_parse(&p, js, strlen(js)) == 4);
 
 	js = "[1, 2, [3, \"a\"], null]";
-	jsmn_init(&p);
-	check(jsmn_parse(&p, js, strlen(js), tokens, 7) == 7);
+	js1_init(&p, tokens, 7);
+	check(js1_parse(&p, js, strlen(js)) == 7);
 
 	return 0;
 }
 
 
 int test_nonstrict(void) {
-#ifndef JSMN_STRICT
+#ifndef JS1_STRICT
 	const char *js;
 	js = "a: 0garbage";
 	check(parse(js, 2, 2,
-				JSMN_PRIMITIVE, "a",
-				JSMN_PRIMITIVE, "0garbage"));
+				JS1_PRIMITIVE, "a",
+				JS1_PRIMITIVE, "0garbage"));
 
 	js = "Day : 26\nMonth : Sep\n\nYear: 12";
 	check(parse(js, 6, 6,
-				JSMN_PRIMITIVE, "Day",
-				JSMN_PRIMITIVE, "26",
-				JSMN_PRIMITIVE, "Month",
-				JSMN_PRIMITIVE, "Sep",
-				JSMN_PRIMITIVE, "Year",
-				JSMN_PRIMITIVE, "12"));
+				JS1_PRIMITIVE, "Day",
+				JS1_PRIMITIVE, "26",
+				JS1_PRIMITIVE, "Month",
+				JS1_PRIMITIVE, "Sep",
+				JS1_PRIMITIVE, "Year",
+				JS1_PRIMITIVE, "12"));
 
 	//nested {s don't cause a parse error.
 	js = "\"key {1\": 1234";
 	check(parse(js, 2, 2,
-		              JSMN_STRING, "key {1", 1,
-		              JSMN_PRIMITIVE, "1234"));
+		              JS1_STRING, "key {1", 1,
+		              JS1_PRIMITIVE, "1234"));
 
 
 #endif
@@ -375,20 +375,20 @@ int test_nonstrict(void) {
 int test_unmatched_brackets(void) {
 	const char *js;
 	js = "\"key 1\": 1234}";
-	check(parse(js, JSMN_ERROR_INVAL, 2));
+	check(parse(js, JS1_ERROR_INVAL, 2));
 	js = "{\"key 1\": 1234";
-	check(parse(js, JSMN_ERROR_PART, 3));
+	check(parse(js, JS1_ERROR_PART, 3));
 	js = "{\"key 1\": 1234}}";
-	check(parse(js, JSMN_ERROR_INVAL, 3));
+	check(parse(js, JS1_ERROR_INVAL, 3));
 	js = "\"key 1\"}: 1234";
-	check(parse(js, JSMN_ERROR_INVAL, 3));
+	check(parse(js, JS1_ERROR_INVAL, 3));
 	js = "{\"key {1\": 1234}";
 	check(parse(js, 3, 3,
-				JSMN_OBJECT, 0, 16, 1,
-				JSMN_STRING, "key {1", 1,
-				JSMN_PRIMITIVE, "1234"));
+				JS1_OBJECT, 0, 16, 1,
+				JS1_STRING, "key {1", 1,
+				JS1_PRIMITIVE, "1234"));
 	js = "{{\"key 1\": 1234}";
-	check(parse(js, JSMN_ERROR_PART, 4));
+	check(parse(js, JS1_ERROR_PART, 4));
 	return 0;
 }
 

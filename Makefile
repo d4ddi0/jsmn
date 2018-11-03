@@ -1,12 +1,12 @@
 # You can put your build options here
 -include config.mk
 
-all: libjsmn.a 
+all: libjs1.a
 
-libjsmn.a: jsmn.o
+libjs1.a: js1.o
 	$(AR) rc $@ $^
 
-%.o: %.c jsmn.h
+%.o: %.c js1.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 test: test_default test_strict test_links test_strict_links
@@ -14,21 +14,21 @@ test_default: test/tests.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o test/$@
 	./test/$@
 test_strict: test/tests.c
-	$(CC) -DJSMN_STRICT=1 $(CFLAGS) $(LDFLAGS) $< -o test/$@
+	$(CC) -DJS1_STRICT=1 $(CFLAGS) $(LDFLAGS) $< -o test/$@
 	./test/$@
 test_links: test/tests.c
-	$(CC) -DJSMN_PARENT_LINKS=1 $(CFLAGS) $(LDFLAGS) $< -o test/$@
+	$(CC) -DJS1_PARENT_LINKS=1 $(CFLAGS) $(LDFLAGS) $< -o test/$@
 	./test/$@
 test_strict_links: test/tests.c
-	$(CC) -DJSMN_STRICT=1 -DJSMN_PARENT_LINKS=1 $(CFLAGS) $(LDFLAGS) $< -o test/$@
+	$(CC) -DJS1_STRICT=1 -DJS1_PARENT_LINKS=1 $(CFLAGS) $(LDFLAGS) $< -o test/$@
 	./test/$@
 
-jsmn_test.o: jsmn_test.c libjsmn.a
+js1_test.o: js1_test.c libjs1.a
 
-simple_example: example/simple.o libjsmn.a
+simple_example: example/simple.o libjs1.a
 	$(CC) $(LDFLAGS) $^ -o $@
 
-jsondump: example/jsondump.o libjsmn.a
+jsondump: example/jsondump.o libjs1.a
 	$(CC) $(LDFLAGS) $^ -o $@
 
 clean:

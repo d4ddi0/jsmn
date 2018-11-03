@@ -1,9 +1,9 @@
 #ifndef __TEST_UTIL_H__
 #define __TEST_UTIL_H__
 
-#include "../jsmn.c"
+#include "../js1.c"
 
-static int vtokeq(const char *s, jsmntok_t *t, int numtok, va_list ap) {
+static int vtokeq(const char *s, struct js1token *t, int numtok, va_list ap) {
 	if (numtok > 0) {
 		int i, start, end, size;
 		int type;
@@ -13,11 +13,11 @@ static int vtokeq(const char *s, jsmntok_t *t, int numtok, va_list ap) {
 		value = NULL;
 		for (i = 0; i < numtok; i++) {
 			type = va_arg(ap, int);
-			if (type == JSMN_STRING) {
+			if (type == JS1_STRING) {
 				value = va_arg(ap, char *);
 				size = va_arg(ap, int);
 				start = end = -1;
-			} else if (type == JSMN_PRIMITIVE) {
+			} else if (type == JS1_PRIMITIVE) {
 				value = va_arg(ap, char *);
 				start = end = size = -1;
 			} else {
@@ -59,7 +59,7 @@ static int vtokeq(const char *s, jsmntok_t *t, int numtok, va_list ap) {
 	return 1;
 }
 
-static int tokeq(const char *s, jsmntok_t *tokens, int numtok, ...) {
+static int tokeq(const char *s, struct js1token *tokens, int numtok, ...) {
 	int ok;
 	va_list args;
 	va_start(args, numtok);
@@ -72,11 +72,11 @@ static int parse(const char *s, int status, int numtok, ...) {
 	int r;
 	int ok = 1;
 	va_list args;
-	jsmn_parser p;
-	jsmntok_t *t = malloc(numtok * sizeof(jsmntok_t));
+	struct js1_parser p;
+	struct js1token *t = malloc(numtok * sizeof(struct js1token));
 
-	jsmn_init(&p);
-	r = jsmn_parse(&p, s, strlen(s), t, numtok);
+	js1_init(&p, t, numtok);
+	r = js1_parse(&p, s, strlen(s));
 	if (r != status) {
 		printf("status is %d, not %d\n", r, status);
 		return 0;

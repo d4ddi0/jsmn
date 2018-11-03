@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include "../jsmn.h"
+#include "../js1.h"
 
 /* Function realloc_it() is a wrapper function for standard realloc()
  * with one difference - it frees old memory pointer in case of realloc
@@ -25,18 +25,18 @@ static inline void *realloc_it(void *ptrmem, size_t size) {
  * The output looks like YAML, but I'm not sure if it's really compatible.
  */
 
-static int dump(const char *js, jsmntok_t *t, size_t count, int indent) {
+static int dump(const char *js, struct js1token *t, size_t count, int indent) {
 	int i, j, k;
 	if (count == 0) {
 		return 0;
 	}
-	if (t->type == JSMN_PRIMITIVE) {
+	if (t->type == JS1_PRIMITIVE) {
 		printf("%.*s", t->end - t->start, js+t->start);
 		return 1;
-	} else if (t->type == JSMN_STRING) {
+	} else if (t->type == JS1_STRING) {
 		printf("'%.*s'", t->end - t->start, js+t->start);
 		return 1;
-	} else if (t->type == JSMN_OBJECT) {
+	} else if (t->type == JS1_OBJECT) {
 		printf("\n");
 		j = 0;
 		for (i = 0; i < t->size; i++) {
@@ -47,7 +47,7 @@ static int dump(const char *js, jsmntok_t *t, size_t count, int indent) {
 			printf("\n");
 		}
 		return j+1;
-	} else if (t->type == JSMN_ARRAY) {
+	} else if (t->type == JS1_ARRAY) {
 		j = 0;
 		printf("\n");
 		for (i = 0; i < t->size; i++) {
@@ -68,12 +68,12 @@ int main() {
 	size_t jslen = 0;
 	char buf[BUFSIZ];
 
-	jsmn_parser p;
-	jsmntok_t *tok;
+	struct js1_parser p;
+	struct js1token *tok;
 	size_t tokcount = 2;
 
 	/* Prepare parser */
-	jsmn_init(&p);
+	js1_init(&p);
 
 	/* Allocate some tokens as a start */
 	tok = malloc(sizeof(*tok) * tokcount);
@@ -106,9 +106,9 @@ int main() {
 		jslen = jslen + r;
 
 again:
-		r = jsmn_parse(&p, js, jslen, tok, tokcount);
+		r = js1_parse(&p, js, jslen, tok, tokcount);
 		if (r < 0) {
-			if (r == JSMN_ERROR_NOMEM) {
+			if (r == JS1_ERROR_NOMEM) {
 				tokcount = tokcount * 2;
 				tok = realloc_it(tok, sizeof(*tok) * tokcount);
 				if (tok == NULL) {
