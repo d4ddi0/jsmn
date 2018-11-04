@@ -15,9 +15,7 @@ static int js1_fill_token(enum js1type type, struct js1_parser *parser,
 	token->start = start;
 	token->end = end;
 	token->size = 0;
-#ifdef JS1_PARENT_LINKS
 	token->parent = parser->toksuper;
-#endif
 	if (parser->toksuper)
 		parser->toksuper->size++;
 
@@ -33,10 +31,6 @@ static int js1_parse_primitive(struct js1_parser *parser, const char *js, size_t
 
 	for (; next < len && js[next] != '\0'; next++) {
 		switch (js[next]) {
-#ifndef JS1_STRICT
-			/* In strict mode primitive must be followed by "," or "}" or "]" */
-			case ':':
-#endif
 			case '\t' : case '\r' : case '\n' : case ' ' :
 			case ','  : case ']'  : case '}' :
 				goto found;
@@ -45,10 +39,7 @@ static int js1_parse_primitive(struct js1_parser *parser, const char *js, size_t
 			return JS1_ERROR_INVAL;
 		}
 	}
-#ifdef JS1_STRICT
-	/* In strict mode primitive must be followed by a comma/object/array */
 	return JS1_ERROR_PART;
-#endif
 
 found:
 	if (js1_fill_token(JS1_PRIMITIVE, parser, parser->pos, next))
@@ -126,7 +117,6 @@ int js1_parse(struct js1_parser *parser, const char *js, size_t len)
 				break;
 			case '}': case ']':
 				type = (c == '}' ? JS1_OBJECT : JS1_ARRAY);
-#ifdef JS1_PARENT_LINKS
 				if (parser->toknext < parser->tokens + 1) {
 					return JS1_ERROR_INVAL;
 				}
@@ -148,27 +138,6 @@ int js1_parse(struct js1_parser *parser, const char *js, size_t len)
 					}
 					token = token->parent;
 				}
-#else
-				for (token = parser->toknext - 1; token >= parser->tokens; token--) {
-					if (token->start != -1 && token->end == -1) {
-						if (token->type != type) {
-							return JS1_ERROR_INVAL;
-						}
-						parser->toksuper = NULL;
-						token->end = parser->pos + 1;
-						break;
-					}
-				}
-				/* Error if unmatched closing bracket */
-				if (token < parser->tokens)
-					return JS1_ERROR_INVAL;
-				for (; token >= parser->tokens; token--) {
-					if (token->start != -1 && token->end == -1) {
-						parser->toksuper = token;
-						break;
-					}
-				}
-#endif
 				break;
 			case '\"':
 				r = js1_parse_string(parser, js, len);
@@ -183,22 +152,9 @@ int js1_parse(struct js1_parser *parser, const char *js, size_t len)
 				if (parser->toksuper &&
 				    parser->toksuper->type != JS1_ARRAY &&
 				    parser->toksuper->type != JS1_OBJECT) {
-#ifdef JS1_PARENT_LINKS
 					parser->toksuper = parser->toksuper->parent;
-#else
-					for (token = parser->toknext - 1; token >= parser->tokens; token--) {
-						if (token->type == JS1_ARRAY || token->type == JS1_OBJECT) {
-							if (token->start != -1 && token->end == -1) {
-								parser->toksuper = token;
-								break;
-							}
-						}
-					}
-#endif
 				}
 				break;
-#ifdef JS1_STRICT
-			/* In strict mode primitives are: numbers and booleans */
 			case '-': case '0': case '1' : case '2': case '3' : case '4':
 			case '5': case '6': case '7' : case '8': case '9':
 			case 't': case 'f': case 'n' :
@@ -210,19 +166,11 @@ int js1_parse(struct js1_parser *parser, const char *js, size_t len)
 						return JS1_ERROR_INVAL;
 					}
 				}
-#else
-			/* In non-strict mode every unquoted value is a primitive */
-			default:
-#endif
 				r = js1_parse_primitive(parser, js, len);
 				if (r < 0) return r;
 				break;
-
-#ifdef JS1_STRICT
-			/* Unexpected char in strict mode */
 			default:
 				return JS1_ERROR_INVAL;
-#endif
 		}
 	}
 

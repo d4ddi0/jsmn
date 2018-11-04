@@ -42,9 +42,7 @@ struct js1token {
 	int start;
 	int end;
 	int size;
-#ifdef JS1_PARENT_LINKS
 	struct js1token *parent;
-#endif
 };
 
 /**

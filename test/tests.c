@@ -56,7 +56,6 @@ int test_object(void) {
 				JS1_STRING, "c", 1,
 				JS1_OBJECT, 15, 17, 0));
 
-#ifdef JS1_STRICT
 	check(parse("{\"a\"\n0}", JS1_ERROR_INVAL, 3));
 	check(parse("{\"a\", 0}", JS1_ERROR_INVAL, 3));
 	check(parse("{\"a\": {2}}", JS1_ERROR_INVAL, 3));
@@ -69,7 +68,6 @@ int test_object(void) {
 	/*check(parse("{\"a\":1,}", JS1_ERROR_INVAL, 4));*/
 	/*check(parse("{\"a\":\"b\":\"c\"}", JS1_ERROR_INVAL, 4));*/
 	/*check(parse("{,}", JS1_ERROR_INVAL, 4));*/
-#endif
 	return 0;
 }
 
@@ -173,7 +171,6 @@ int test_partial_string(void) {
 }
 
 int test_partial_array(void) {
-#ifdef JS1_STRICT
 	int r;
 	int i;
 	struct js1_parser p;
@@ -196,7 +193,6 @@ int test_partial_array(void) {
 			check(r == JS1_ERROR_PART);
 		}
 	}
-#endif
 	return 0;
 }
 
@@ -226,27 +222,6 @@ int test_array_nomem(void) {
 					JS1_PRIMITIVE, "123",
 					JS1_STRING, "hello", 0));
 	}
-	return 0;
-}
-
-int test_unquoted_keys(void) {
-#ifndef JS1_STRICT
-	int r;
-	struct js1_parser p;
-	struct js1token tok[10];
-	const char *js;
-
-	js1_init(&p, tok, 10);
-	js = "key1: \"value\"\nkey2 : 123";
-
-	r = js1_parse(&p, js, strlen(js));
-	check(r >= 0);
-	check(tokeq(js, tok, 4,
-				JS1_PRIMITIVE, "key1",
-				JS1_STRING, "value", 0,
-				JS1_PRIMITIVE, "key2",
-				JS1_PRIMITIVE, "123"));
-#endif
 	return 0;
 }
 
@@ -343,35 +318,6 @@ int test_count(void) {
 	return 0;
 }
 
-
-int test_nonstrict(void) {
-#ifndef JS1_STRICT
-	const char *js;
-	js = "a: 0garbage";
-	check(parse(js, 2, 2,
-				JS1_PRIMITIVE, "a",
-				JS1_PRIMITIVE, "0garbage"));
-
-	js = "Day : 26\nMonth : Sep\n\nYear: 12";
-	check(parse(js, 6, 6,
-				JS1_PRIMITIVE, "Day",
-				JS1_PRIMITIVE, "26",
-				JS1_PRIMITIVE, "Month",
-				JS1_PRIMITIVE, "Sep",
-				JS1_PRIMITIVE, "Year",
-				JS1_PRIMITIVE, "12"));
-
-	//nested {s don't cause a parse error.
-	js = "\"key {1\": 1234";
-	check(parse(js, 2, 2,
-		              JS1_STRING, "key {1", 1,
-		              JS1_PRIMITIVE, "1234"));
-
-
-#endif
-	return 0;
-}
-
 int test_unmatched_brackets(void) {
 	const char *js;
 	js = "\"key 1\": 1234}";
@@ -402,12 +348,10 @@ int main(void) {
 	test(test_partial_string, "test partial JSON string parsing");
 	test(test_partial_array, "test partial array reading");
 	test(test_array_nomem, "test array reading with a smaller number of tokens");
-	test(test_unquoted_keys, "test unquoted keys (like in JavaScript)");
 	test(test_input_length, "test strings that are not null-terminated");
 	test(test_issue_22, "test issue #22");
 	test(test_issue_27, "test issue #27");
 	test(test_count, "test tokens count estimation");
-	test(test_nonstrict, "test for non-strict mode");
 	test(test_unmatched_brackets, "test for unmatched brackets");
 	printf("\nPASSED: %d\nFAILED: %d\n", test_passed, test_failed);
 	return (test_failed > 0);
