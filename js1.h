@@ -57,6 +57,8 @@ struct js1_parser {
 	struct js1token *toksuper; /* superior token node, e.g parent object or array */
 };
 
+#define is_hex(c) ((c) <= 'f' && (c) >= '0' && \
+		   ((c) <= '9' || (c) >= 'a' || ((c) >= 'A' && (c) <= 'F')))
 /**
  * Create JSON parser over an array of tokens
  */

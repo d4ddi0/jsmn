@@ -31,9 +31,9 @@ static int js1_parse_primitive(struct js1_parser *parser, const char *js, size_t
 
 	for (; next < len && js[next] != '\0'; next++) {
 		switch (js[next]) {
-			case '\t' : case '\r' : case '\n' : case ' ' :
-			case ','  : case ']'  : case '}' :
-				goto found;
+		case '\t' : case '\r' : case '\n' : case ' ' :
+		case ','  : case ']'  : case '}' :
+			goto found;
 		}
 		if (js[next] < 32 || js[next] >= 127) {
 			return JS1_ERROR_INVAL;
@@ -68,26 +68,23 @@ static int js1_parse_string(struct js1_parser *parser, const char *js, size_t le
 
 		/* Backslash: Quoted symbol expected */
 		if (c == '\\' && ++next < len) {
-			int i;
 			switch (js[next]) {
-				/* Allowed escaped symbols */
-				case '\"': case '/' : case '\\' : case 'b' :
-				case 'f' : case 'r' : case 'n'  : case 't' :
+			/* Allowed escaped symbols */
+			case '\"': case '/' : case '\\' : case 'b' :
+			case 'f' : case 'r' : case 'n'  : case 't' :
+				break;
+			/* Allows escaped symbol \uXXXX */
+			case 'u':
+				if (next + 4 > len)
 					break;
-				/* Allows escaped symbol \uXXXX */
-				case 'u':
-					for(i = 0; i < 4 && ++next < len && js[next] != '\0'; i++) {
-						/* If it isn't a hex character we have an error */
-						if(!((js[next] >= 48 && js[next] <= 57) || /* 0-9 */
-									(js[next] >= 65 && js[next] <= 70) || /* A-F */
-									(js[next] >= 97 && js[next] <= 102))) { /* a-f */
-							return JS1_ERROR_INVAL;
-						}
-					}
-					break;
-				/* Unexpected symbol */
-				default:
-					return JS1_ERROR_INVAL;
+				for(int i = 0; i < 4 && js[++next] != '\0'; i++) {
+					if(!is_hex(js[next]))
+						return JS1_ERROR_INVAL;
+				}
+				break;
+			/* Unexpected symbol */
+			default:
+				return JS1_ERROR_INVAL;
 			}
 		}
 	}
@@ -110,67 +107,67 @@ int js1_parse(struct js1_parser *parser, const char *js, size_t len)
 
 		c = js[parser->pos];
 		switch (c) {
-			case '{': case '[':
-				if (js1_fill_token((c == '{' ? JS1_OBJECT : JS1_ARRAY), parser, parser->pos, -1))
-					return JS1_ERROR_NOMEM;
-				parser->toksuper = parser->toknext - 1;
-				break;
-			case '}': case ']':
-				type = (c == '}' ? JS1_OBJECT : JS1_ARRAY);
-				if (parser->toknext < parser->tokens + 1) {
-					return JS1_ERROR_INVAL;
-				}
-				token = parser->toknext - 1;
-				for (;;) {
-					if (token->start != -1 && token->end == -1) {
-						if (token->type != type) {
-							return JS1_ERROR_INVAL;
-						}
-						token->end = parser->pos + 1;
-						parser->toksuper = token->parent;
-						break;
-					}
-					if (token->parent == NULL) {
-						if(token->type != type || !parser->toksuper) {
-							return JS1_ERROR_INVAL;
-						}
-						break;
-					}
-					token = token->parent;
-				}
-				break;
-			case '\"':
-				r = js1_parse_string(parser, js, len);
-				if (r < 0) return r;
-				break;
-			case '\t' : case '\r' : case '\n' : case ' ':
-				break;
-			case ':':
-				parser->toksuper = parser->toknext - 1;
-				break;
-			case ',':
-				if (parser->toksuper &&
-				    parser->toksuper->type != JS1_ARRAY &&
-				    parser->toksuper->type != JS1_OBJECT) {
-					parser->toksuper = parser->toksuper->parent;
-				}
-				break;
-			case '-': case '0': case '1' : case '2': case '3' : case '4':
-			case '5': case '6': case '7' : case '8': case '9':
-			case 't': case 'f': case 'n' :
-				/* And they must not be keys of the object */
-				if (parser->toksuper) {
-					struct js1token *t = parser->toksuper;
-					if (t->type == JS1_OBJECT ||
-							(t->type == JS1_STRING && t->size != 0)) {
+		case '{': case '[':
+			if (js1_fill_token((c == '{' ? JS1_OBJECT : JS1_ARRAY), parser, parser->pos, -1))
+				return JS1_ERROR_NOMEM;
+			parser->toksuper = parser->toknext - 1;
+			break;
+		case '}': case ']':
+			type = (c == '}' ? JS1_OBJECT : JS1_ARRAY);
+			if (parser->toknext < parser->tokens + 1) {
+				return JS1_ERROR_INVAL;
+			}
+			token = parser->toknext - 1;
+			for (;;) {
+				if (token->start != -1 && token->end == -1) {
+					if (token->type != type) {
 						return JS1_ERROR_INVAL;
 					}
+					token->end = parser->pos + 1;
+					parser->toksuper = token->parent;
+					break;
 				}
-				r = js1_parse_primitive(parser, js, len);
-				if (r < 0) return r;
-				break;
-			default:
-				return JS1_ERROR_INVAL;
+				if (token->parent == NULL) {
+					if(token->type != type || !parser->toksuper) {
+						return JS1_ERROR_INVAL;
+					}
+					break;
+				}
+				token = token->parent;
+			}
+			break;
+		case '\"':
+			r = js1_parse_string(parser, js, len);
+			if (r < 0) return r;
+			break;
+		case '\t' : case '\r' : case '\n' : case ' ':
+			break;
+		case ':':
+			parser->toksuper = parser->toknext - 1;
+			break;
+		case ',':
+			if (parser->toksuper &&
+			    parser->toksuper->type != JS1_ARRAY &&
+			    parser->toksuper->type != JS1_OBJECT) {
+				parser->toksuper = parser->toksuper->parent;
+			}
+			break;
+		case '-': case '0': case '1' : case '2': case '3' : case '4':
+		case '5': case '6': case '7' : case '8': case '9':
+		case 't': case 'f': case 'n' :
+			/* And they must not be keys of the object */
+			if (parser->toksuper) {
+				struct js1token *t = parser->toksuper;
+				if (t->type == JS1_OBJECT ||
+						(t->type == JS1_STRING && t->size != 0)) {
+					return JS1_ERROR_INVAL;
+				}
+			}
+			r = js1_parse_primitive(parser, js, len);
+			if (r < 0) return r;
+			break;
+		default:
+			return JS1_ERROR_INVAL;
 		}
 	}
 
