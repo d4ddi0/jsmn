@@ -39,8 +39,8 @@ enum js1err {
  */
 struct js1token {
 	enum js1type type;
-	int start;
-	int end;
+	const char *start;
+	const char *end;
 	int size;
 	struct js1token *parent;
 };
@@ -50,7 +50,8 @@ struct js1token {
  * the string being parsed now and current position in that string
  */
 struct js1_parser {
-	unsigned int pos; /* offset in the JSON string */
+	const char *js;
+	const char *js_end;
 	struct js1token *tokens;
 	struct js1token *tokend;
 	struct js1token *toknext; /* next token to allocate */
@@ -62,7 +63,8 @@ struct js1_parser {
 /**
  * Create JSON parser over an array of tokens
  */
-void js1_init(struct js1_parser *parser, struct js1token *tokens, size_t num_tokens);
+void js1_init(struct js1_parser *parser, struct js1token *tokens,
+	      size_t num_tokens);
 
 /**
  * Run JSON parser. It parses a JSON data string into and array of tokens, each describing

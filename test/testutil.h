@@ -31,12 +31,12 @@ static int vtokeq(const char *s, struct js1token *t, int numtok, va_list ap) {
 				return 0;
 			}
 			if (start != -1 && end != -1) {
-				if (t[i].start != start) {
-					printf("token %d start is %d, not %d\n", i, t[i].start, start);
+				if (t[i].start != s + start) {
+					printf("token %d start is %ld, not %d\n", i, t[i].start - s, start);
 					return 0;
 				}
-				if (t[i].end != end ) {
-					printf("token %d end is %d, not %d\n", i, t[i].end, end);
+				if (t[i].end != s + end ) {
+					printf("token %d end is %ld, not %d\n", i, t[i].end - s, end);
 					return 0;
 				}
 			}
@@ -46,11 +46,11 @@ static int vtokeq(const char *s, struct js1token *t, int numtok, va_list ap) {
 			}
 
 			if (s != NULL && value != NULL) {
-				const char *p = s + t[i].start;
+				const char *p = t[i].start;
 				if (strlen(value) != t[i].end - t[i].start ||
 						strncmp(p, value, t[i].end - t[i].start) != 0) {
-					printf("token %d value is %.*s, not %s\n", i, t[i].end-t[i].start,
-							s+t[i].start, value);
+					printf("token %d value is %.*s, not %s\n", i, (int)(t[i].end-t[i].start),
+							t[i].start, value);
 					return 0;
 				}
 			}

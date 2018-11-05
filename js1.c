@@ -4,7 +4,7 @@
  * Fills token type and boundaries.
  */
 static int js1_fill_token(enum js1type type, struct js1_parser *p,
-			  int start, int end)
+			  const char *start, const char *end)
 {
 	struct js1token *token = p->toknext++;
 
@@ -25,21 +25,21 @@ static int js1_fill_token(enum js1type type, struct js1_parser *p,
 /**
  * Fills next available token with JSON primitive.
  */
-static int js1_parse_primitive(struct js1_parser *p, const char *js, size_t len)
+static int js1_parse_primitive(struct js1_parser *p)
 {
-	int next = p->pos;
+	const char *next = p->js;
 
-	for (; next < len && js[next] != '\0'; next++) {
-		switch (js[next]) {
+	for (; next < p->js_end && *next != '\0'; next++) {
+		switch (*next) {
 		case '\t' : case '\r' : case '\n' : case ' ' :
 		case ','  : case ']'  : case '}' :
-			if (js1_fill_token(JS1_PRIMITIVE, p, p->pos, next))
+			if (js1_fill_token(JS1_PRIMITIVE, p, p->js, next))
 				return JS1_ERROR_NOMEM;
 
-			p->pos = next - 1;
+			p->js = next - 1;
 			return 0;
 		}
-		if (js[next] < 32 || js[next] >= 127) {
+		if (*next < 32 || *next >= 127) {
 			return JS1_ERROR_INVAL;
 		}
 	}
@@ -49,33 +49,33 @@ static int js1_parse_primitive(struct js1_parser *p, const char *js, size_t len)
 /**
  * Fills next token with JSON string.
  */
-static int js1_parse_string(struct js1_parser *p, const char *js, size_t len)
+static int js1_parse_string(struct js1_parser *p)
 {
 	/* Skip starting quote */
-	for (int next = p->pos + 1; next < len && js[next] != '\0'; next++) {
-		char c = js[next];
+	for (const char *next = p->js + 1; next < p->js_end && *next != '\0'; next++) {
+		char c = *next;
 
 		/* Quote: end of string */
 		if (c == '\"') {
-			if (js1_fill_token(JS1_STRING, p, p->pos+1, next))
+			if (js1_fill_token(JS1_STRING, p, p->js+1, next))
 				return JS1_ERROR_NOMEM;
-			p->pos = next;
+			p->js = next;
 			return 0;
 		}
 
 		/* Backslash: Quoted symbol expected */
-		if (c == '\\' && ++next < len) {
-			switch (js[next]) {
+		if (c == '\\' && ++next < p->js_end) {
+			switch (*next) {
 			/* Allowed escaped symbols */
 			case '\"': case '/' : case '\\' : case 'b' :
 			case 'f' : case 'r' : case 'n'  : case 't' :
 				break;
 			/* Allows escaped symbol \uXXXX */
 			case 'u':
-				if (next + 4 > len)
+				if (next + 4 > p->js_end)
 					break;
-				for(int i = 0; i < 4 && js[++next] != '\0'; i++) {
-					if(!is_hex(js[next]))
+				for(int i = 0; i < 4 && *(++next) != '\0'; i++) {
+					if(!is_hex(*next))
 						return JS1_ERROR_INVAL;
 				}
 				break;
@@ -96,16 +96,19 @@ int js1_parse(struct js1_parser *p, const char *js, size_t len)
 	int r;
 	if (!p->tokens)
 		return JS1_ERROR_NOMEM;
+	p->js = js;
+	p->js_end = js + len;
 
-	for (; p->pos < len && js[p->pos] != '\0'; p->pos++) {
+	for (; p->js < p->js_end && *p->js != '\0'; p->js++) {
 		char c;
 		enum js1type type;
 		struct js1token *token;
 
-		c = js[p->pos];
+		c = *p->js;
 		switch (c) {
 		case '{': case '[':
-			if (js1_fill_token((c == '{' ? JS1_OBJECT : JS1_ARRAY), p, p->pos, -1))
+			if (js1_fill_token((c == '{' ? JS1_OBJECT : JS1_ARRAY),
+					   p, p->js, NULL))
 				return JS1_ERROR_NOMEM;
 			p->toksuper = p->toknext - 1;
 			break;
@@ -116,11 +119,11 @@ int js1_parse(struct js1_parser *p, const char *js, size_t len)
 			}
 			token = p->toknext - 1;
 			for (;;) {
-				if (token->start != -1 && token->end == -1) {
+				if (!token->end) {
 					if (token->type != type) {
 						return JS1_ERROR_INVAL;
 					}
-					token->end = p->pos + 1;
+					token->end = p->js + 1;
 					p->toksuper = token->parent;
 					break;
 				}
@@ -134,7 +137,7 @@ int js1_parse(struct js1_parser *p, const char *js, size_t len)
 			}
 			break;
 		case '\"':
-			r = js1_parse_string(p, js, len);
+			r = js1_parse_string(p);
 			if (r < 0) return r;
 			break;
 		case '\t' : case '\r' : case '\n' : case ' ':
@@ -160,7 +163,7 @@ int js1_parse(struct js1_parser *p, const char *js, size_t len)
 					return JS1_ERROR_INVAL;
 				}
 			}
-			r = js1_parse_primitive(p, js, len);
+			r = js1_parse_primitive(p);
 			if (r < 0) return r;
 			break;
 		default:
@@ -170,7 +173,7 @@ int js1_parse(struct js1_parser *p, const char *js, size_t len)
 
 	for (struct js1token *token = p->toknext - 1; token >= p->tokens; token--) {
 		/* Unmatched opened object or array */
-		if (token->start != -1 && token->end == -1) {
+		if (!token->end) {
 			return JS1_ERROR_PART;
 		}
 	}
@@ -184,7 +187,6 @@ int js1_parse(struct js1_parser *p, const char *js, size_t len)
  */
 void js1_init(struct js1_parser *p, struct js1token *tokens, size_t num_tokens)
 {
-	p->pos = 0;
 	p->tokens = tokens;
 	p->tokend = tokens + num_tokens;
 	p->toknext = tokens;
